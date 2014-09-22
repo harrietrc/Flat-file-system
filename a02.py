@@ -1,8 +1,8 @@
-import abc
+import abc # Not necessary unless you uncomment that abstract method
 
 class FileSystem(object):
     def __init__(self):
-
+        pass
 
 class FileTree(object):
     """ This tree is only a representation of the file tree. It shouldn't be used to modify the actual
