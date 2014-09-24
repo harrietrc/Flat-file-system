@@ -1,8 +1,34 @@
-import abc # Not necessary unless you uncomment that abstract method
+__author__ = 'Harriet Robinson-Chen'
+__project__ = 'Softeng 370 Assignment 2'
 
-class FileSystem(object):
-    def __init__(self):
-        pass
+import abc # Not necessary unless you uncomment that abstract method
+import sys
+
+def main():
+    while True:
+        var = prompt()
+        interpret(var)
+
+def prompt():
+    var = input("ffs>")
+    return var
+
+def interpret(user_input):
+    """ Executes the method to be called based on user input. Returns the not_mapped method (command not found) if the
+        input is invalid. Decided to execute here rather than in main to make it easier to unit test.
+    """
+    {'exit':exit}.get(user_input, not_mapped)()
+
+def not_mapped():
+    print("Invalid command. Please try again.")
+
+def parse():
+    pass
+
+def exit():
+    sys.exit()
+
+""" Actual OOP stuff """
 
 class FileTree(object):
     """ This tree is only a representation of the file tree. It shouldn't be used to modify the actual
@@ -58,3 +84,6 @@ class DirNode(Node):
             self.children.remove(child)
         except ValueError:
             pass
+
+if __name__=="__main__":
+    main()
