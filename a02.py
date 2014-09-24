@@ -1,7 +1,6 @@
 __author__ = 'Harriet Robinson-Chen'
 __project__ = 'Softeng 370 Assignment 2'
 
-import abc # Not necessary unless you uncomment that abstract method
 import sys
 
 def main():
@@ -23,22 +22,38 @@ def not_mapped():
     print("Invalid command. Please try again.")
 
 def parse():
+    """ Converts the user's input into command and arguments
+    """
     pass
 
 def exit():
     sys.exit()
 
-""" Actual OOP stuff """
+""" Tree stuff """
 
 class FileTree(object):
     """ This tree is only a representation of the file tree. It shouldn't be used to modify the actual
         file system.
     """
     def __init__(self):
-        self.root = DirNode(None, "-", None) # The root node will always have no parent and be named '-'
+        self.root = DirNode(None, "-", None, None) # The root node will always have no parent and be named '-'
+        self.current_directory = self.root
 
     def is_current_directory_valid(self):
         """ Tests whether the current directory exists in the file tree.
+        """
+        pass
+
+    def locate_by_name(self, name):
+        """ Locates a file or directory by name and returns that node. Throws an exception if the node is not found.
+            Uses a basic BFS.
+        """
+        queue = [] # Directories to search
+        queue.append(self.root)
+        return None
+
+    def scan(self, dir):
+        """ Scans the given directory for new files and directories that were not created through this program.
         """
         pass
 
@@ -46,12 +61,6 @@ class Node(object):
     def __init__(self, parent, name):
         self.parent = parent
         self.name = name
-
-    # @abc.abstractmethod
-    # def is_dir(self):
-    #     """ Returns true if the node is a directory.
-    #     """
-    #     return
 
 class FileNode(Node):
     def __init__(self, parent, name):
