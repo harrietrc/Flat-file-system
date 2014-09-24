@@ -34,8 +34,13 @@ class FileTree(object):
     """ This tree is only a representation of the file tree. It shouldn't be used to modify the actual
         file system.
     """
-    def __init__(self, root):
-        self.root = root # Will always have the name -
+    def __init__(self):
+        self.root = DirNode(None, "-", None) # The root node will always have no parent and be named '-'
+
+    def is_current_directory_valid(self):
+        """ Tests whether the current directory exists in the file tree.
+        """
+        pass
 
 class Node(object):
     def __init__(self, parent, name):
@@ -61,27 +66,43 @@ class FileNode(Node):
         return NotImplemented
 
 class DirNode(Node):
-    def __init__(self, parent, name, children):
+    def __init__(self, parent, name, files, dirs):
         super(DirNode, self).__init__(parent, name)
-        self.children = set(children) # The children of this directory
+        self.files = set(files) # The files in this directory.
+        self.dirs = set(dirs) # The directories in this directory.
+        """ I've separated children into files and directories so that searching for a directory doesn't require
+            unnecessary equality checks against files, and vice versa. """
 
     def __eq__(self, other):
         if isinstance(other, DirNode):
             return self.name == other.name and self.parent == other.parent
         return NotImplemented
 
-    def add_child(self, new_child):
-        """ Adds a new child for the node.
+    def add_child_file(self, child_file):
+        """ Adds a new child file for the node.
         """
-        self.children.add(new_child) # Do we need to deal with duplicate file names?
+        self.files.add(child_file)
+
+    def add_child_dir(self, child_dir):
+        """ Adds a directory as a child for the node.
+        """
+        self.dirs.add(child_dir)
 
     """ If we need to worry about moving directories this gets a lot more complicated """
 
-    def rem_child(self, child):
-        """ Removes a child node from the list of children. Expects a node, not a name.
+    def rem_child_file(self, child_file):
+        """ Removes a child file from the list of children. Expects a node, not a name.
         """
         try:
-            self.children.remove(child)
+            self.files.remove(child_file)
+        except ValueError:
+            pass
+
+    def rem_child_dir(self, child_dir):
+        """ Removes a child directory from the list of children. Expects a node, not a name.
+        """
+        try:
+            self.dirs.remove(child_dir)
         except ValueError:
             pass
 
