@@ -103,6 +103,7 @@ class FileTree(object):
 
     def locate_by_name(self, name):
         """ Locates a file or directory by name and returns that node. Throws an exception if the node is not found.
+            Expects the absolute path at the moment.
         """
         # Things screw up if you don't account for this case
         if name == '-':
@@ -120,11 +121,11 @@ class FileTree(object):
         if name_path[-1]:  # We're looking for a file
             is_dir = False
             target = name_path[-1]
-            path_length = len(name_path)
+            path_length = len(name_path) -1
         else:
             is_dir = True
             target = name_path[-2]
-            path_length = len(name_path) - 1
+            path_length = len(name_path) - 2
 
         if not path_length:
             node = self.root  # Parent is root
@@ -161,13 +162,12 @@ class FileTree(object):
         """ Given the fully-qualified name of a file, creates that file
         """
         path = name.split('-')
+        absolute_paths = ["-".join(path[:x]) + '-' for x in range(2,len(path))]  # Excludes the root directory
 
         if not path[0]:  # Absolute
-            parent = self.root
-            for directory in path[1:-1]:  # All the directories in the path
-                child = self.add_dir_to_parent(directory, parent)  # Should probably check for existence in tree
-                print(self.locate_by_name(directory).name)
-                parent = child  # Move along down the hierarchy
+            for directory in absolute_paths:  # All the directories in the path
+                print(directory)
+                self.create_dir_by_name(directory)  # Should probably check for existence in tree)
 
         rel_name = path[-1]
         parent = self.get_parent(name)
@@ -178,13 +178,13 @@ class FileTree(object):
         """
         rel_name = name.split('-')[-2]
         parent = self.get_parent(name)
-        self.add_dir_to_parent(name, parent)
+        self.add_dir_to_parent(rel_name, parent)
 
     def add_dir_to_parent(self, dir_name, parent):
         """ Adds a directory (specified with its name relative to the parent) to a given parent node.
         """
         new_child = DirNode(parent, dir_name, None, None)  # Directory has no children at the moment
-        parent.add_child_file(new_child)
+        parent.add_child_dir(new_child)
         return new_child
 
     def add_file_to_parent(self, file_name, parent):
@@ -204,11 +204,11 @@ class FileTree(object):
         # Get the path, excluding the child, and use it to find the parent.
         if name[-1] == '-':  # Directory
             path = name.rsplit('-', 2)[0]
-            path_to_parent = '-' if not path else path
+            path_to_parent = '-' if not path else path + '-'
             parent = self.locate_by_name(path_to_parent)
         else:  # File
             path = name.rsplit('-', 1)[0]
-            path_to_parent = '-' if not path else path
+            path_to_parent = '-' if not path else path + '-'
             parent = self.locate_by_name(path_to_parent)
         return parent
 
