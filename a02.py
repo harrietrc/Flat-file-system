@@ -58,7 +58,7 @@ def exit():
 
 class FileTree(object):
     """ This tree is only a representation of the file tree. It shouldn't be used to modify the actual
-        file system. Singleton?
+        file system. Will translate between fully-qualified names and the node representation. Singleton?
     """
     def __init__(self):
         self.root = DirNode(None, "-", None, None) # The root node will always have no parent and be named '-'
@@ -76,6 +76,20 @@ class FileTree(object):
         queue = [] # Directories to search
         queue.append(self.root)
         return None
+
+    def create_by_name(self, name):
+        """ Given the fully-qualified name of a file or directory, creates that file/directory
+        """
+
+    def get_parent(self, name):
+        """ Gets the parent as a node from the child's fully-qualified name
+        """
+        # Get the path, excluding the child, and use it to find the parent.
+        if name[-1] == '-': # Directory
+            parent = self.locate_by_name(name.split('-')[:-2])
+        else: # File
+            parent = self.locate_by_name(name.split('-')[:-1])
+        return parent
 
     def scan(self, dir):
         """ Scans the given directory for new files and directories that were not created through this program.
