@@ -156,21 +156,43 @@ class FileTree(object):
         """
         pass
 
+    # ABS ONLY!!
     def create_file_by_name(self, name):
         """ Given the fully-qualified name of a file, creates that file
         """
-        rel_name = name.split('-')[-1]
+        path = name.split('-')
+
+        if not path[0]:  # Absolute
+            parent = self.root
+            for directory in path[1:-1]:  # All the directories in the path
+                child = self.add_dir_to_parent(directory, parent)  # Should probably check for existence in tree
+                print(self.locate_by_name(directory).name)
+                parent = child  # Move along down the hierarchy
+
+        rel_name = path[-1]
         parent = self.get_parent(name)
-        new_child = FileNode(parent, rel_name)
-        parent.add_child_file(new_child)
+        self.add_file_to_parent(rel_name, parent)
 
     def create_dir_by_name(self, name):
         """ Given the fully-qualified name of a directory, creates that directory
         """
         rel_name = name.split('-')[-2]
         parent = self.get_parent(name)
-        new_child = DirNode(parent, rel_name, None, None)  # Directory has no children at the moment
+        self.add_dir_to_parent(name, parent)
+
+    def add_dir_to_parent(self, dir_name, parent):
+        """ Adds a directory (specified with its name relative to the parent) to a given parent node.
+        """
+        new_child = DirNode(parent, dir_name, None, None)  # Directory has no children at the moment
         parent.add_child_file(new_child)
+        return new_child
+
+    def add_file_to_parent(self, file_name, parent):
+        """ Adds a file (specified with its name relative to the parent) to a given parent node.
+        """
+        new_child = FileNode(parent, file_name)
+        parent.add_child_file(new_child)
+        return new_child
 
     def get_parent(self, name):
         """ Gets the parent as a node from the child's fully-qualified name
