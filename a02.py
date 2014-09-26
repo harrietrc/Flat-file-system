@@ -33,7 +33,7 @@ class FileSystem(object):
 
     def test(self, args):
         node = self.file_tree.locate_by_name(args)
-        print(node.name)
+        print(node.parent)
 
     def not_mapped(self, args=None):
         print("Invalid command. Please try again.")
@@ -120,25 +120,28 @@ class FileTree(object):
         if name_path[-1]:  # We're looking for a file
             is_dir = False
             target = name_path[-1]
-            path_length = len(name_path) - 1
+            path_length = len(name_path)
         else:
             is_dir = True
             target = name_path[-2]
-            path_length = len(name_path) - 2
+            path_length = len(name_path) - 1
 
-        # Step through the tree, checking/matching names of directories as we go
-        for i in range(path_length):
-            for d in node.dirs:
-                if d.name == name_path[i]:
-                    node = d
-                    break
-            else:  # No break statement encountered
-                raise NoSuchPathException("The path provided is invalid.")
+        if not path_length:
+            node = self.root  # Parent is root
+        else:
+            # Step through the tree, checking/matching names of directories as we go
+            for i in range(path_length):
+                for d in node.dirs:
+                    if d.name == name_path[i]:
+                        node = d
+                        break
+                else:  # No break statement encountered
+                    raise NoSuchPathException("The path provided is invalid.")
 
         # Node should be the parent, so now we just need to search for the target file/dir
         if is_dir:
             for d in node.dirs:
-                if d.name == target:
+                if d.name == target:  # fix this as below
                     return d
         else:
             for file in node.files:
@@ -156,13 +159,18 @@ class FileTree(object):
     def create_file_by_name(self, name):
         """ Given the fully-qualified name of a file, creates that file
         """
+        rel_name = name.split('-')[-1]
         parent = self.get_parent(name)
-        new_child = FileNode(parent, name)
+        new_child = FileNode(parent, rel_name)
         parent.add_child_file(new_child)
 
-    def create_dir_by_name(self):
+    def create_dir_by_name(self, name):
         """ Given the fully-qualified name of a directory, creates that directory
         """
+        rel_name = name.split('-')[-2]
+        parent = self.get_parent(name)
+        new_child = DirNode(parent, rel_name, None, None)  # Directory has no children at the moment
+        parent.add_child_file(new_child)
 
     def get_parent(self, name):
         """ Gets the parent as a node from the child's fully-qualified name
@@ -173,11 +181,11 @@ class FileTree(object):
 
         # Get the path, excluding the child, and use it to find the parent.
         if name[-1] == '-':  # Directory
-            path = name.split('-', 2)[0]
+            path = name.rsplit('-', 2)[0]
             path_to_parent = '-' if not path else path
             parent = self.locate_by_name(path_to_parent)
         else:  # File
-            path = name.split('-', 1)[0]
+            path = name.rsplit('-', 1)[0]
             path_to_parent = '-' if not path else path
             parent = self.locate_by_name(path_to_parent)
         return parent
@@ -212,7 +220,9 @@ class FileNode(Node):
         return super(FileNode, self).__hash__()
 
     def __str__(self):
-        return self.name + '\n'
+        s = '\t' + self.parent.name + '\n' # not actually what we want but it'll do for now
+        s +='\t' + self.name + '\n'
+        return s
 
 
 class DirNode(Node):
@@ -261,8 +271,8 @@ class DirNode(Node):
 
     def __str__(self):
         s = self.name + '\n'
-        s += '\n'.join(self.files)
-        s += '\n'.join(self.dirs)
+        s += '\t\n'.join(map(str, self.files))
+        s += '\t\n'.join(map(str, self.dirs))
         return s
 
 
