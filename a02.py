@@ -13,10 +13,10 @@ def main():
 
 class FileSystem(object):
 
-    tree = None
+    file_tree = None
 
     def __init__(self):
-        self.tree = FileTree()
+        self.file_tree = FileTree()
 
     def prompt(self):
         var = input("ffs>")
@@ -29,10 +29,10 @@ class FileSystem(object):
         if len(args):  # Arguments were given
             {'create':self.create, 'test':self.test}.get(command, self.not_mapped)(args)
         else: # No arguments given
-            {'quit':quit}.get(command, self.not_mapped)()
+            {'quit':self.quit, 'tree':self.tree}.get(command, self.not_mapped)()
 
     def test(self, args):
-        node = self.tree.locate_by_name(args)
+        node = self.file_tree.locate_by_name(args)
         print(node.name)
 
     def not_mapped(self, args=None):
@@ -51,7 +51,7 @@ class FileSystem(object):
         if self.validate_create(file_name):
             file = open(file_name, 'w') # Doesn't really need to be in the if block, as only opens and closes the file
             file.close()
-            self.tree.create_file_by_name(file_name)
+            self.file_tree.create_file_by_name(file_name)
 
     # Also needs to add the new file to the tree - could separate by leaving that up to the scan function - separation
     # of concerns. But needs to check for uniqueness (should be property of set)
@@ -72,6 +72,11 @@ class FileSystem(object):
 
         return True
 
+    def tree(self):
+        """ Print the file tree
+        """
+        print(self.file_tree)
+
     def quit(self):
         sys.exit()
 
@@ -85,6 +90,11 @@ class FileTree(object):
     def __init__(self):
         self.root = DirNode(None, "-", None, None)  # The root node will always have no parent and be named '-'
         self.current_directory = self.root
+
+    def __str__(self):
+        s = ''
+        s += str(self.root)
+        return s
 
     def is_current_directory_valid(self):
         """ Tests whether the current directory exists in the file tree.
@@ -201,6 +211,9 @@ class FileNode(Node):
     def __hash__(self):
         return super(FileNode, self).__hash__()
 
+    def __str__(self):
+        return self.name + '\n'
+
 
 class DirNode(Node):
     def __init__(self, parent, name, files, dirs):
@@ -245,6 +258,12 @@ class DirNode(Node):
 
     def __hash__(self):
         return super(DirNode, self).__hash__()
+
+    def __str__(self):
+        s = self.name + '\n'
+        s += '\n'.join(self.files)
+        s += '\n'.join(self.dirs)
+        return s
 
 
 class NoSuchPathException(Exception):
