@@ -27,13 +27,9 @@ class FileSystem(object):
             the input is invalid. Decided to execute here rather than in main to make it easier to unit test.
         """
         if len(args):  # Arguments were given
-            {'create':self.create, 'test':self.test}.get(command, self.not_mapped)(args)
+            {'create':self.create}.get(command, self.not_mapped)(args)
         else: # No arguments given
             {'quit':self.quit, 'tree':self.tree}.get(command, self.not_mapped)()
-
-    def test(self, args):
-        node = self.file_tree.locate_by_name(args)
-        print(node.parent)
 
     def not_mapped(self, args=None):
         print("Invalid command. Please try again.")
@@ -166,7 +162,6 @@ class FileTree(object):
 
         if not path[0]:  # Absolute
             for directory in absolute_paths:  # All the directories in the path
-                print(directory)
                 self.create_dir_by_name(directory)  # Should probably check for existence in tree)
 
         rel_name = path[-1]
