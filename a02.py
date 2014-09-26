@@ -71,11 +71,52 @@ class FileTree(object):
 
     def locate_by_name(self, name):
         """ Locates a file or directory by name and returns that node. Throws an exception if the node is not found.
-            Uses a basic BFS.
         """
-        queue = [] # Directories to search
-        queue.append(self.root)
-        return None
+
+        # Get start node
+        if name[0] != '-': # Path must be relative
+            node = self.get_start_of_relative_path(name)
+        else:
+            node = self.root # Start at the root
+
+        name_path = name.split('-')[1:]
+
+        # Target is located differently depending on whether we're looking for a file or directory
+        if name_path[-1]: # We're looking for a file
+            is_dir = False
+            target = name_path[-1]
+            path_length = len(name_path) - 1
+        else:
+            is_dir = True
+            target = name_path[-2]
+            path_length = len(name_path) - 2
+
+        # Step through the tree, checking/matching names of directories as we go
+        for i in range(path_length):
+            for dir in node.dirs:
+                if dir.name == name_path[i]:
+                    node = dir
+                    break
+            else: # No break statement encountered
+                raise NoSuchPathException("The path provided is invalid.")
+
+        # Node should be the parent, so now we just need to search for the target file/dir
+        if is_dir:
+            for dir in node.dirs:
+                if dir.name == target:
+                    return dir
+        else:
+            for file in node.files:
+                if file.name == target:
+                    return file
+
+        # Should have returned by now
+        raise NoSuchPathException("The specified file or directory does not exist.")
+
+    def get_start_of_relative_path(self, rel_path):
+        """
+        """
+        pass
 
     def create_by_name(self, name):
         """ Given the fully-qualified name of a file or directory, creates that file/directory
@@ -84,6 +125,11 @@ class FileTree(object):
     def get_parent(self, name):
         """ Gets the parent as a node from the child's fully-qualified name
         """
+
+        # If we're asked for the parent of the root node, just return the root
+        if name == '-':
+            return self.root
+
         # Get the path, excluding the child, and use it to find the parent.
         if name[-1] == '-': # Directory
             parent = self.locate_by_name(name.split('-')[:-2])
@@ -153,6 +199,9 @@ class DirNode(Node):
             self.dirs.remove(child_dir)
         except ValueError:
             pass
+
+class NoSuchPathException(Exception):
+    pass
 
 if __name__=="__main__":
     main()
