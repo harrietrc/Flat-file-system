@@ -27,7 +27,7 @@ class FileSystem(object):
             the input is invalid. Decided to execute here rather than in main to make it easier to unit test.
         """
         if len(args):  # Arguments were given
-            {'create':self.create}.get(command, self.not_mapped)(args)
+            {'create':self.create, 'delete':self.delete}.get(command, self.not_mapped)(args)
         else: # No arguments given
             {'quit':self.quit, 'tree':self.tree}.get(command, self.not_mapped)()
 
@@ -49,8 +49,23 @@ class FileSystem(object):
             file.close()
             self.file_tree.create_file_by_name(file_name)
 
-    # Also needs to add the new file to the tree - could separate by leaving that up to the scan function - separation
-    # of concerns. But needs to check for uniqueness (should be property of set)
+    def delete(self, file_name):
+        """ Deletes the file with the specified name
+        """
+        # Check that the file exists
+        if self.validate_delete(file_name):
+            os.remove(file_name)
+            self.file_tree.delete_file_by_name(file_name)
+
+
+    def validate_delete(self, file_name):
+        """ Validates that the file to be deleted exists in the directory..
+        """
+        for file in os.listdir('.'):
+            if file == file_name:
+                return True
+        print("File does not exist.")
+        return False
 
     def validate_create(self, file_name):
         """ Validates that the file name is valid. If it is, this returns true. Should test both that the file is not
@@ -153,6 +168,13 @@ class FileTree(object):
         """
         pass
 
+    def delete_file_by_name(self, name):
+        """ Given the full-qualified name of a file, deletes that file
+        """
+        file = self.locate_by_name(name)
+        parent = file.parent
+        parent.rem_child_file(file)
+
     # ABS ONLY!!
     def create_file_by_name(self, name):
         """ Given the fully-qualified name of a file, creates that file
@@ -165,14 +187,14 @@ class FileTree(object):
                 self.create_dir_by_name(directory)  # Should probably check for existence in tree)
 
         rel_name = path[-1]
-        parent = self.get_parent(name)
+        parent = self.get_parent_from_name(name)
         self.add_file_to_parent(rel_name, parent)
 
     def create_dir_by_name(self, name):
         """ Given the fully-qualified name of a directory, creates that directory
         """
         rel_name = name.split('-')[-2]
-        parent = self.get_parent(name)
+        parent = self.get_parent_from_name(name)
         self.add_dir_to_parent(rel_name, parent)
 
     def add_dir_to_parent(self, dir_name, parent):
@@ -189,8 +211,9 @@ class FileTree(object):
         parent.add_child_file(new_child)
         return new_child
 
-    def get_parent(self, name):
-        """ Gets the parent as a node from the child's fully-qualified name
+    def get_parent_from_name(self, name):
+        """ Gets the parent as a node from the child's fully-qualified name. This is used for files/dirs that don't
+            already exist - hence why we can't just return the parent field of the child.
         """
         # If we're asked for the parent of the root node, just return the root
         if name == '-':
@@ -237,8 +260,7 @@ class FileNode(Node):
         return super(FileNode, self).__hash__()
 
     def __str__(self):
-        s = '\t' + self.parent.name + '\n' # not actually what we want but it'll do for now
-        s +='\t' + self.name + '\n'
+        s ='\t' + self.name + '\n'
         return s
 
 
@@ -287,9 +309,9 @@ class DirNode(Node):
         return super(DirNode, self).__hash__()
 
     def __str__(self):
-        s = self.name + '\n'
-        s += '\t\n'.join(map(str, self.files))
-        s += '\t\n'.join(map(str, self.dirs))
+        s = "\ndir name: " + self.name + '\n'
+        s += "child files %s: " %self.name + '\t\n '.join(map(str, self.files))
+        s += "child dirs %s: " %self.name + '\t\n '.join(map(str, self.dirs))
         return s
 
 
