@@ -3,28 +3,53 @@ __project__ = 'Softeng 370 Assignment 2'
 
 import sys
 
+tree = None
+
 def main():
+    tree = FileTree()
     while True:
-        var = prompt()
-        interpret(var)
+        line = prompt()
+        parse(line)
 
 def prompt():
     var = input("ffs>")
     return var
 
-def interpret(user_input):
+def interpret(command, args):
     """ Executes the method to be called based on user input. Returns the not_mapped method (command not found) if the
         input is invalid. Decided to execute here rather than in main to make it easier to unit test.
     """
-    {'exit':exit}.get(user_input, not_mapped)()
+    if len(args): # Arguments were given
+        {'create':create}.get(command, not_mapped)(args)
+    else: # No arguments given
+        {'exit':exit}.get(command, not_mapped)()
 
 def not_mapped():
     print("Invalid command. Please try again.")
 
-def parse():
+def parse(line):
     """ Converts the user's input into command and arguments
     """
-    pass
+    command, space, args = line.partition(' ')
+    interpret(command, args) # Not sure if it should be called from here
+
+def create(file_name):
+    """ Creates a file with the specified name
+    """
+
+    if file_name[-1] == '-':
+        print("Directories should not be created directly.")
+
+    file = open(file_name, 'w') # Is write permission the right permission?
+    file.close()
+
+# Also needs to add the new file to the tree - could separate by leaving that up to the scan function - separation of
+# concerns. But needs to check for uniqueness (should be property of set)
+
+def validate_create(file_name):
+    """ Validates that the file name is valid. If it is, this returns true.
+    """
+
 
 def exit():
     sys.exit()
@@ -33,7 +58,7 @@ def exit():
 
 class FileTree(object):
     """ This tree is only a representation of the file tree. It shouldn't be used to modify the actual
-        file system.
+        file system. Singleton?
     """
     def __init__(self):
         self.root = DirNode(None, "-", None, None) # The root node will always have no parent and be named '-'
@@ -77,8 +102,8 @@ class FileNode(Node):
 class DirNode(Node):
     def __init__(self, parent, name, files, dirs):
         super(DirNode, self).__init__(parent, name)
-        self.files = set(files) # The files in this directory.
-        self.dirs = set(dirs) # The directories in this directory.
+        self.files = set(files) if files is not None else set() # The files in this directory.
+        self.dirs = set(dirs) if dirs is not None else set() # The directories in this directory.
         """ I've separated children into files and directories so that searching for a directory doesn't require
             unnecessary equality checks against files, and vice versa. """
 
