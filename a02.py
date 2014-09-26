@@ -2,7 +2,7 @@ __author__ = 'Harriet Robinson-Chen'
 __project__ = 'Softeng 370 Assignment 2'
 
 import sys
-
+import os
 
 def main():
     fs = FileSystem()
@@ -27,9 +27,9 @@ class FileSystem(object):
             the input is invalid. Decided to execute here rather than in main to make it easier to unit test.
         """
         if len(args):  # Arguments were given
-            {'create':self.create, 'test':self.test}.get(command, self.not_mapped)(self, args)
+            {'create':self.create, 'test':self.test}.get(command, self.not_mapped)(args)
         else: # No arguments given
-            {'exit':exit}.get(command, self.not_mapped)(self)
+            {'exit':exit}.get(command, self.not_mapped)()
 
     def test(self, args):
         node = self.tree.locate_by_name(args)
@@ -47,19 +47,29 @@ class FileSystem(object):
     def create(self, file_name):
         """ Creates a file with the specified name
         """
-        if file_name[-1] == '-':
-            print("Directories should not be created directly.")
-
-        file = open(file_name, 'w') # Is write permission the right permission?
-        file.close()
+        # Check that the file name is valid
+        if self.validate_create(file_name):
+            file = open(file_name, 'w') # Doesn't really need to be in the if block, as only opens and closes the file
+            file.close()
 
     # Also needs to add the new file to the tree - could separate by leaving that up to the scan function - separation
     # of concerns. But needs to check for uniqueness (should be property of set)
 
     def validate_create(self, file_name):
-        """ Validates that the file name is valid. If it is, this returns true.
+        """ Validates that the file name is valid. If it is, this returns true. Should test both that the file is not
+            a directory and that it is unique.
         """
-        pass
+        if file_name[-1] == '-':
+            print("Directories should not be created directly.")
+            return False
+
+        # Check that file name is unique
+        for file in os.listdir('.'):
+            if file == file_name:
+                print("File name is not unique")
+                return False
+
+        return True
 
     def exit(self):
         sys.exit()
