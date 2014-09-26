@@ -28,9 +28,9 @@ class FileSystem(object):
             the input is invalid. Decided to execute here rather than in main to make it easier to unit test.
         """
         if len(args):  # Arguments were given
-            {'create': self.create, 'delete': self.delete}.get(command, self.not_mapped)(args)
+            {'create': self.create, 'delete': self.delete, 'ls': self.ls}.get(command, self.not_mapped)(args)
         else:  # No arguments given
-            {'quit': self.quit, 'tree': self.tree}.get(command, self.not_mapped)()
+            {'quit': self.quit, 'tree': self.tree, 'ls': self.ls}.get(command, self.not_mapped)()
 
     def not_mapped(self, args=None):
         print("Invalid command. Please try again.")
@@ -87,6 +87,21 @@ class FileSystem(object):
         """ Print the file tree
         """
         print(self.file_tree)
+
+    def ls(self, dir_name=None):
+        """ Lists all the files and directories in the specified directory, or in the current working directory if no
+            directory is specified.
+        """
+        if dir_name:
+            directory = self.file_tree.locate_by_name(dir_name)
+            # Print files and directories in specified directory
+            for file in directory.files:
+                print("f: ", file.name)
+            for child_dir in directory.dirs:
+                print("d: ", child_dir.name)
+        else:
+            # Print files in current working directory
+            pass
 
     def quit(self):
         sys.exit()
@@ -261,8 +276,7 @@ class FileNode(Node):
         return super(FileNode, self).__hash__()
 
     def __str__(self):
-        s = '\t' + self.name + '\n'
-        return s
+        return self.name
 
 
 class DirNode(Node):
@@ -310,10 +324,7 @@ class DirNode(Node):
         return super(DirNode, self).__hash__()
 
     def __str__(self):
-        s = "\dir name: " + self.name + '\n'
-        s += "child files %s: " % self.name + '\t\n '.join(map(str, self.files))
-        s += "child dirs %s: " % self.name + '\t\n '.join(map(str, self.dirs))
-        return s
+        return self.name
 
 
 class NoSuchPathException(Exception):
