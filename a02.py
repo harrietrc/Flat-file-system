@@ -4,6 +4,7 @@ __project__ = 'Softeng 370 Assignment 2'
 import sys
 import os
 
+
 def main():
     fs = FileSystem()
     while True:
@@ -27,9 +28,9 @@ class FileSystem(object):
             the input is invalid. Decided to execute here rather than in main to make it easier to unit test.
         """
         if len(args):  # Arguments were given
-            {'create':self.create, 'delete':self.delete}.get(command, self.not_mapped)(args)
-        else: # No arguments given
-            {'quit':self.quit, 'tree':self.tree}.get(command, self.not_mapped)()
+            {'create': self.create, 'delete': self.delete}.get(command, self.not_mapped)(args)
+        else:  # No arguments given
+            {'quit': self.quit, 'tree': self.tree}.get(command, self.not_mapped)()
 
     def not_mapped(self, args=None):
         print("Invalid command. Please try again.")
@@ -38,14 +39,14 @@ class FileSystem(object):
         """ Converts the user's input into command and arguments
         """
         command, space, args = line.partition(' ')
-        self.interpret(command, args) # Not sure if it should be called from here
+        self.interpret(command, args)  # Not sure if it should be called from here
 
     def create(self, file_name):
         """ Creates a file with the specified name
         """
         # Check that the file name is valid
         if self.validate_create(file_name):
-            file = open(file_name, 'w') # Doesn't really need to be in the if block, as only opens and closes the file
+            file = open(file_name, 'w')  # Doesn't really need to be in the if block, as only opens and closes the file
             file.close()
             self.file_tree.create_file_by_name(file_name)
 
@@ -56,7 +57,6 @@ class FileSystem(object):
         if self.validate_delete(file_name):
             os.remove(file_name)
             self.file_tree.delete_file_by_name(file_name)
-
 
     def validate_delete(self, file_name):
         """ Validates that the file to be deleted exists in the directory..
@@ -132,7 +132,7 @@ class FileTree(object):
         if name_path[-1]:  # We're looking for a file
             is_dir = False
             target = name_path[-1]
-            path_length = len(name_path) -1
+            path_length = len(name_path) - 1
         else:
             is_dir = True
             target = name_path[-2]
@@ -180,7 +180,7 @@ class FileTree(object):
         """ Given the fully-qualified name of a file, creates that file
         """
         path = name.split('-')
-        absolute_paths = ["-".join(path[:x]) + '-' for x in range(2,len(path))]  # Excludes the root directory
+        absolute_paths = ["-".join(path[:x]) + '-' for x in range(2, len(path))]  # Excludes the root directory
 
         if not path[0]:  # Absolute
             for directory in absolute_paths:  # All the directories in the path
@@ -242,7 +242,8 @@ class Node(object):
         self.name = name
 
     def __hash__(self):
-        return hash((self.name,self.parent))
+        return hash((self.name, self.parent))
+
 
 class FileNode(Node):
     def __init__(self, parent, name):
@@ -260,7 +261,7 @@ class FileNode(Node):
         return super(FileNode, self).__hash__()
 
     def __str__(self):
-        s ='\t' + self.name + '\n'
+        s = '\t' + self.name + '\n'
         return s
 
 
@@ -309,9 +310,9 @@ class DirNode(Node):
         return super(DirNode, self).__hash__()
 
     def __str__(self):
-        s = "\ndir name: " + self.name + '\n'
-        s += "child files %s: " %self.name + '\t\n '.join(map(str, self.files))
-        s += "child dirs %s: " %self.name + '\t\n '.join(map(str, self.dirs))
+        s = "\dir name: " + self.name + '\n'
+        s += "child files %s: " % self.name + '\t\n '.join(map(str, self.files))
+        s += "child dirs %s: " % self.name + '\t\n '.join(map(str, self.dirs))
         return s
 
 
