@@ -29,13 +29,13 @@ class FileSystem(object):
         if len(args):  # Arguments were given
             {'create':self.create, 'test':self.test}.get(command, self.not_mapped)(args)
         else: # No arguments given
-            {'exit':exit}.get(command, self.not_mapped)()
+            {'quit':quit}.get(command, self.not_mapped)()
 
     def test(self, args):
         node = self.tree.locate_by_name(args)
         print(node.name)
 
-    def not_mapped(self):
+    def not_mapped(self, args=None):
         print("Invalid command. Please try again.")
 
     def parse(self, line):
@@ -51,6 +51,7 @@ class FileSystem(object):
         if self.validate_create(file_name):
             file = open(file_name, 'w') # Doesn't really need to be in the if block, as only opens and closes the file
             file.close()
+            self.tree.create_file_by_name(file_name)
 
     # Also needs to add the new file to the tree - could separate by leaving that up to the scan function - separation
     # of concerns. But needs to check for uniqueness (should be property of set)
@@ -71,7 +72,7 @@ class FileSystem(object):
 
         return True
 
-    def exit(self):
+    def quit(self):
         sys.exit()
 
 """ Tree stuff """
@@ -93,6 +94,10 @@ class FileTree(object):
     def locate_by_name(self, name):
         """ Locates a file or directory by name and returns that node. Throws an exception if the node is not found.
         """
+        # Things screw up if you don't account for this case
+        if name == '-':
+            return self.root
+
         # Get start node
         if name[0] != '-':  # Path must be relative
             node = self.get_start_of_relative_path(name)
@@ -138,8 +143,15 @@ class FileTree(object):
         """
         pass
 
-    def create_by_name(self, name):
-        """ Given the fully-qualified name of a file or directory, creates that file/directory
+    def create_file_by_name(self, name):
+        """ Given the fully-qualified name of a file, creates that file
+        """
+        parent = self.get_parent(name)
+        new_child = FileNode(parent, name)
+        parent.add_child_file(new_child)
+
+    def create_dir_by_name(self):
+        """ Given the fully-qualified name of a directory, creates that directory
         """
 
     def get_parent(self, name):
@@ -151,9 +163,13 @@ class FileTree(object):
 
         # Get the path, excluding the child, and use it to find the parent.
         if name[-1] == '-':  # Directory
-            parent = self.locate_by_name(name.split('-')[:-2])
+            path = name.split('-', 2)[0]
+            path_to_parent = '-' if not path else path
+            parent = self.locate_by_name(path_to_parent)
         else:  # File
-            parent = self.locate_by_name(name.split('-')[:-1])
+            path = name.split('-', 1)[0]
+            path_to_parent = '-' if not path else path
+            parent = self.locate_by_name(path_to_parent)
         return parent
 
     def scan(self, directory):
@@ -167,6 +183,8 @@ class Node(object):
         self.parent = parent
         self.name = name
 
+    def __hash__(self):
+        return hash((self.name,self.parent))
 
 class FileNode(Node):
     def __init__(self, parent, name):
@@ -179,6 +197,9 @@ class FileNode(Node):
         if isinstance(other, FileNode):
             return self.name == other.name and self.parent == other.parent
         return NotImplemented
+
+    def __hash__(self):
+        return super(FileNode, self).__hash__()
 
 
 class DirNode(Node):
@@ -221,6 +242,9 @@ class DirNode(Node):
             self.dirs.remove(child_dir)
         except ValueError:
             pass
+
+    def __hash__(self):
+        return super(DirNode, self).__hash__()
 
 
 class NoSuchPathException(Exception):
