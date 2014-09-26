@@ -30,7 +30,7 @@ class FileSystem(object):
         if len(args):  # Arguments were given
             {'create': self.create, 'delete': self.delete, 'ls': self.ls}.get(command, self.not_mapped)(args)
         else:  # No arguments given
-            {'quit': self.quit, 'tree': self.tree, 'ls': self.ls}.get(command, self.not_mapped)()
+            {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls}.get(command, self.not_mapped)()
 
     def not_mapped(self, args=None):
         print("Invalid command. Please try again.")
@@ -102,6 +102,14 @@ class FileSystem(object):
         else:
             # Print files in current working directory
             pass
+
+    def rls(self):
+        """ Executes the system's ls -l command.
+        """
+        if os.name == 'nt':  # I'm developing in Windows
+            os.system('icacls . /T /Q')  # Eww gross
+        else:  # This assignment is supposed to be for linux
+            os.system('ls -l')
 
     def quit(self):
         sys.exit()
