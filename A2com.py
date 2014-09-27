@@ -1,4 +1,4 @@
-__author__ = 'Harriet Robinson-Chen'
+__author__ = 'Harriet Robinson-Chen - hrob748'
 __project__ = 'Softeng 370 Assignment 2'
 
 """ One thing to note, if this doesn't behave as expected - any files you manually add (outside of through the create
@@ -13,6 +13,8 @@ import os
 
 
 def main():
+    if not os.path.exists('./A2dir'):
+        os.makedirs('./A2dir')
     fs = FileSystem()
     while True:
         fs.scan()
@@ -28,7 +30,7 @@ class FileSystem(object):
         self.file_tree = FileTree()
 
     def prompt(self):
-        var = input("ffs>")
+        var = input("ffs> ")
         return var
 
     def interpret(self, command, args):
@@ -60,7 +62,7 @@ class FileSystem(object):
 
         # Check that the file name is valid
         if self.validate_create(file_name):
-            file = open(file_name, 'w')  # Doesn't really need to be in the if block, as only opens and closes the file
+            file = open('./A2dir/' + file_name, 'w')
             file.close()
             self.file_tree.create_file_by_name(file_name)
 
@@ -73,7 +75,7 @@ class FileSystem(object):
 
         # Check that the file exists
         if self.validate_delete(file_name):
-            os.remove(file_name)
+            os.remove('./A2dir/' + file_name)
             self.file_tree.delete_file_by_name(file_name)
 
     def dd(self, dir_name):
@@ -85,7 +87,7 @@ class FileSystem(object):
 
         # Check that directory exists
         if self.validate_dd(dir_name):
-            for file in os.listdir('.'):
+            for file in os.listdir('./A2dir'):
                 if file.startswith(dir_name):
                     os.remove(file)  # Delete the actual file
             self.file_tree.delete_dir_by_name(dir_name)  # Delete the representation of the directory from the tree
@@ -94,9 +96,9 @@ class FileSystem(object):
         """ Deletes all the files in root (directories cannot stand on their own). Will only delete files that are
             part of the ffs (i.e. start with '-')
         """
-        for file in os.listdir('.'):
+        for file in os.listdir('./A2dir'):
             if file.startswith('-'):  # I have my git files, and of course this .py file in there
-                os.remove(file)
+                os.remove('./A2dir/' + file)
             # Clear the tree
             self.file_tree = FileTree()  # Just replace the old tree
 
@@ -112,7 +114,7 @@ class FileSystem(object):
             file_name = self.file_tree.relative_to_absolute(file_name)
 
         if self.file_exists(file_name):
-            with open(file_name, 'a') as file:
+            with open('./A2dir/' + file_name, 'a') as file:
                 file.write(content)
         else:
             print("File does not exist.")
@@ -125,7 +127,7 @@ class FileSystem(object):
             file_name = self.file_tree.relative_to_absolute(file_name)
 
         if self.file_exists(file_name):
-            with open(file_name) as file:
+            with open('./A2dir/' + file_name) as file:
                 content = file.read()
                 print(content)
         else:
@@ -140,7 +142,7 @@ class FileSystem(object):
             return False
 
         # Deals only with absolute paths
-        for file in os.listdir('.'):
+        for file in os.listdir('./A2dir'):
             if file.startswith(dir_name):
                 return True
         print("Directory does not exist.")
@@ -177,7 +179,7 @@ class FileSystem(object):
     def file_exists(self, file_name):
         """ Checks whether the file exists in the current directory. Returns true if it does.
         """
-        for file in os.listdir('.'):
+        for file in os.listdir('./A2dir'):
             if file == file_name:
                 return True
         return False
@@ -205,10 +207,7 @@ class FileSystem(object):
     def rls(self):
         """ Executes the system's ls -l command. Assumes current directory is A2dir, but can easily be specified.
         """
-        if os.name == 'nt':  # I'm developing in Windows
-            os.system('icacls . /T /Q')  # Eww gross
-        else:  # This assignment is supposed to be for linux
-            os.system('ls -l')
+        os.system('ls -l ./A2dir')
 
     def scan(self):
         """ Scans the real directory for new files and directories that were not created through this program. This
@@ -216,7 +215,7 @@ class FileSystem(object):
             even what I have here is necessary, let alone that added functionality).
         """
         # Perhaps a little inelegant?
-        for file in os.listdir('.'):
+        for file in os.listdir('./A2dir'):
             if file.startswith('-'):
                 try:
                     self.file_tree.locate_by_name(file)
