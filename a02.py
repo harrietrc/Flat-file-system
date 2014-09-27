@@ -28,9 +28,11 @@ class FileSystem(object):
             the input is invalid. Decided to execute here rather than in main to make it easier to unit test.
         """
         if len(args):  # Arguments were given
-            {'create': self.create, 'delete': self.delete, 'ls': self.ls, 'dd': self.dd}.get(command, self.not_mapped)(args)
+            {'create': self.create, 'delete': self.delete, 'ls': self.ls, 'dd': self.dd}.get(command, self.not_mapped)(
+                args)
         else:  # No arguments given
-            {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls}.get(command, self.not_mapped)()
+            {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls, 'clear': self.clear}.get(
+                command, self.not_mapped)()
 
     def not_mapped(self, args=None):
         print("Invalid command. Please try again.")
@@ -67,6 +69,16 @@ class FileSystem(object):
                 if file.startswith(dir_name):
                     os.remove(file)  # Delete the actual file
             self.file_tree.delete_dir_by_name(dir_name)  # Delete the representation of the directory from the tree
+
+    def clear(self):
+        """ Deletes all the files in root (directories cannot stand on their own). Will only delete files that are
+            part of the ffs (i.e. start with '-')
+        """
+        for file in os.listdir('.'):
+            if file.startswith('-'):  # I have my git files, and of course this .py file in there
+                os.remove(file)
+            # Clear the tree
+            self.file_tree = FileTree()  # Just replace the old tree
 
     def validate_dd(self, dir_name):
         """ Validates that the directory to be deleted exists. Returns false if the name is invalid.
