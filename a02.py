@@ -29,7 +29,7 @@ class FileSystem(object):
         """
         if len(args):  # Arguments were given
             {'create': self.create, 'delete': self.delete, 'ls': self.ls, 'dd': self.dd, 'add': self.add,
-            'cat': self.cat}.get(command, self.not_mapped)(args)
+                'cat': self.cat, 'test': self.test}.get(command, self.not_mapped)(args)
         else:  # No arguments given
             {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls, 'clear': self.clear}.get(
                 command, self.not_mapped)()
@@ -184,6 +184,10 @@ class FileSystem(object):
     def quit(self):
         sys.exit()
 
+    def test(self, name):
+        node = self.file_tree.locate_by_name(name)
+        print(node.get_full_name())
+
 """ Tree stuff """
 
 
@@ -199,11 +203,6 @@ class FileTree(object):
         s = ''
         s += str(self.root)
         return s
-
-    def is_current_directory_valid(self):
-        """ Tests whether the current directory exists in the file tree.
-        """
-        pass
 
     def locate_by_name(self, name):
         """ Locates a file or directory by name and returns that node. Throws an exception if the node is not found.
@@ -344,6 +343,17 @@ class Node(object):
     def __hash__(self):
         return hash((self.name, self.parent))
 
+    def get_full_name(self):
+        """ Gets the fully qualified name of the file or directory.
+        """
+        parents = list()
+        node = self
+        while node.parent:  # Get parent until you hit the root
+            parents.append(node.name)
+            node = node.parent
+        full_name = '-'.join(reversed(parents))
+        return '-' + full_name
+
 
 class FileNode(Node):
     def __init__(self, parent, name):
@@ -362,6 +372,9 @@ class FileNode(Node):
 
     def __str__(self):
         return self.name
+
+    def get_full_name(self):
+        return super(FileNode, self).get_full_name()
 
 
 class DirNode(Node):
@@ -404,6 +417,9 @@ class DirNode(Node):
             self.dirs.remove(child_dir)
         except ValueError:
             pass
+
+    def get_full_name(self):
+        return super(DirNode, self).get_full_name()
 
     def __hash__(self):
         return super(DirNode, self).__hash__()
