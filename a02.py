@@ -3,7 +3,10 @@ __project__ = 'Softeng 370 Assignment 2'
 
 """ One thing to note, if this doesn't behave as expected - any files you manually add (outside of through the create
     command) will be picked up by this file system if they're formatted like the other ffs files. I didn't, however,
-    implement a check to see whether files had been removed by means other than the delete command. """
+    implement a check to see whether files had been removed by means other than the delete command.
+
+    To do if I have time: implement the above, and refactor so that FileSystem only accesses the tree through FileTree.
+    """
 
 import sys
 import os
@@ -34,10 +37,10 @@ class FileSystem(object):
         """
         if len(args):  # Arguments were given
             {'create': self.create, 'delete': self.delete, 'ls': self.ls, 'dd': self.dd, 'add': self.add,
-                'cat': self.cat, 'test': self.test}.get(command, self.not_mapped)(args)
+                'cat': self.cat, 'test': self.test, 'cd': self.cd}.get(command, self.not_mapped)(args)
         else:  # No arguments given
-            {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls, 'clear': self.clear, 'pwd': self.pwd
-                }.get(
+            {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls, 'clear': self.clear, 'pwd': self.pwd,
+                'cd': self.cd}.get(
                 command, self.not_mapped)()
 
     def not_mapped(self, args=None):
@@ -208,6 +211,28 @@ class FileSystem(object):
         current_directory_name = current_directory.get_full_name()
         print(current_directory_name)
 
+    def cd(self, directory=None):
+        """ Change the current working directory. No arg = root. .. = parent directory. For now this can't deal with
+            commands such as cd ..-somesibling
+        """
+        # Lots of conditions within conditions - consider refactoring for sanity's sake.
+        if not directory:
+            self.file_tree.current_directory = self.file_tree.root
+        elif directory == '..':  # Change to parent
+            if self.file_tree.current_directory.name == '-':  # Root has no parent
+                print("Root directory has no parent.")
+            else:
+                self.file_tree.current_directory = self.file_tree.current_directory.parent
+        else:
+            # Check format of name
+            if directory[-1] != '-':
+                print("Please specify a directory, not a file.")
+            else:
+                try:
+                    self.file_tree.current_directory = self.file_tree.locate_by_name(directory)
+                except NoSuchPathException:
+                    print("Directory does not exist.")
+
     def quit(self):
         sys.exit()
 
@@ -298,8 +323,16 @@ class FileTree(object):
         """ Given the fully-qualified name of a directory, deletes that directory
         """
         directory = self.locate_by_name(name)
+
         parent = directory.parent
         parent.rem_child_dir(directory)
+        directory.parent = None  # Have to break reference from parent to child, and child to parent
+
+        # Check to see whether the current directory still exists (kind of a hacky way of doing it)
+        try:
+            self.current_directory.get_full_name()
+        except MalformedTreeException:
+            self.current_directory = self.root
 
     # ABS ONLY!!
     def create_file_by_name(self, name):
@@ -373,6 +406,8 @@ class Node(object):
         while node.parent:  # Get parent until you hit the root
             parents.append(node.name)
             node = node.parent
+        if node.name != '-':  # Orphan node
+            raise MalformedTreeException("Node is not attached to the root.")
         full_name = '-'.join(reversed(parents))
         return '-' + full_name
 
@@ -441,7 +476,8 @@ class DirNode(Node):
             pass
 
     def get_full_name(self):
-        return super(DirNode, self).get_full_name()
+        name = super(DirNode, self).get_full_name()
+        return name + ('-' if name != '-' else '')  # Bit of a messy way to do things
 
     def __hash__(self):
         return super(DirNode, self).__hash__()
@@ -451,6 +487,12 @@ class DirNode(Node):
 
 
 class NoSuchPathException(Exception):
+    pass
+
+
+class MalformedTreeException(Exception):
+    """ Possible a bad name for this, but should be thrown when the tree is not structured as expected.
+    """
     pass
 
 if __name__ == "__main__":
