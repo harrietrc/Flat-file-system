@@ -5,7 +5,8 @@ __project__ = 'Softeng 370 Assignment 2'
     command) will be picked up by this file system if they're formatted like the other ffs files. I didn't, however,
     implement a check to see whether files had been removed by means other than the delete command.
 
-    To do if I have time: implement the above, and refactor so that FileSystem only accesses the tree through FileTree.
+    Note also that dd and ls accept directory names that miss the final hyphen, even though the specs don't require it
+    (although I think it might be mentioned somewhere on the assignment brief).
     """
 
 import sys
@@ -81,6 +82,10 @@ class FileSystem(object):
     def dd(self, dir_name):
         """ Deletes the directory with the specified name.
         """
+        # Allow the user to leave off the final hyphen
+        if dir_name[-1] != '-':
+            dir_name += '-'
+
         # A better design would call this in some function in the FileTree class. Converts relative to absolute.
         if dir_name[0] != '-':
             dir_name = self.file_tree.relative_to_absolute(dir_name)
@@ -89,7 +94,7 @@ class FileSystem(object):
         if self.validate_dd(dir_name):
             for file in os.listdir('./A2dir'):
                 if file.startswith(dir_name):
-                    os.remove(file)  # Delete the actual file
+                    os.remove('./A2dir/' + file)  # Delete the actual file
             self.file_tree.delete_dir_by_name(dir_name)  # Delete the representation of the directory from the tree
 
     def clear(self):
@@ -196,6 +201,11 @@ class FileSystem(object):
         # No argument - use current working directory
         if not dir_name:
             dir_name = self.file_tree.current_directory.get_full_name()
+
+        # Allow the user to leave off the final hyphen
+        if dir_name[-1] != '-':
+            dir_name += '-'
+
         directory = self.file_tree.locate_by_name(dir_name)
 
         # Print files and directories in specified directory
