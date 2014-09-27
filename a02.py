@@ -28,7 +28,7 @@ class FileSystem(object):
             the input is invalid. Decided to execute here rather than in main to make it easier to unit test.
         """
         if len(args):  # Arguments were given
-            {'create': self.create, 'delete': self.delete, 'ls': self.ls}.get(command, self.not_mapped)(args)
+            {'create': self.create, 'delete': self.delete, 'ls': self.ls, 'dd': self.dd}.get(command, self.not_mapped)(args)
         else:  # No arguments given
             {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls}.get(command, self.not_mapped)()
 
@@ -63,7 +63,10 @@ class FileSystem(object):
         """
         # Check that directory exists
         if self.validate_dd(dir_name):
-            pass
+            for file in os.listdir('.'):
+                if file.startswith(dir_name):
+                    os.remove(file)  # Delete the actual file
+            self.file_tree.delete_dir_by_name(dir_name)  # Delete the representation of the directory from the tree
 
     def validate_dd(self, dir_name):
         """ Validates that the directory to be deleted exists. Returns false if the name is invalid.
@@ -73,9 +76,9 @@ class FileSystem(object):
             print("Please enter a directory name, not the name of a file.")
             return False
 
-        # This should deal with both absolute and relative paths
+        # Deals only with absolute paths
         for file in os.listdir('.'):
-            if dir_name in file:
+            if file.startswith(dir_name):
                 return True
         print("Directory does not exist.")
         return False
@@ -88,9 +91,9 @@ class FileSystem(object):
             print("Please enter a file name, not the name of a directory.")
             return False
 
-        # Should work for both absolute and relative paths
+        # Deals with absolute paths only
         for file in os.listdir('.'):
-            if file.endswith(file_name):
+            if file == file_name:
                 return True
         print("File does not exist.")
         return False
@@ -220,11 +223,18 @@ class FileTree(object):
         pass
 
     def delete_file_by_name(self, name):
-        """ Given the full-qualified name of a file, deletes that file
+        """ Given the fully-qualified name of a file, deletes that file
         """
         file = self.locate_by_name(name)
         parent = file.parent
         parent.rem_child_file(file)
+
+    def delete_dir_by_name(self, name):
+        """ Given the fully-qualified name of a directory, deletes that directory
+        """
+        directory = self.locate_by_name(name)
+        parent = directory.parent
+        parent.rem_child_dir(directory)
 
     # ABS ONLY!!
     def create_file_by_name(self, name):
