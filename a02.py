@@ -37,7 +37,7 @@ class FileSystem(object):
         """
         if len(args):  # Arguments were given
             {'create': self.create, 'delete': self.delete, 'ls': self.ls, 'dd': self.dd, 'add': self.add,
-                'cat': self.cat, 'test': self.test, 'cd': self.cd}.get(command, self.not_mapped)(args)
+                'cat': self.cat, 'cd': self.cd}.get(command, self.not_mapped)(args)
         else:  # No arguments given
             {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls, 'clear': self.clear, 'pwd': self.pwd,
                 'cd': self.cd}.get(
@@ -55,6 +55,10 @@ class FileSystem(object):
     def create(self, file_name):
         """ Creates a file with the specified name
         """
+        # A better design would call this in some function in the FileTree class. Converts relative to absolute.
+        if file_name[0] != '-':
+            file_name = self.file_tree.relative_to_absolute(file_name)
+
         # Check that the file name is valid
         if self.validate_create(file_name):
             file = open(file_name, 'w')  # Doesn't really need to be in the if block, as only opens and closes the file
@@ -64,6 +68,10 @@ class FileSystem(object):
     def delete(self, file_name):
         """ Deletes the file with the specified name
         """
+        # A better design would call this in some function in the FileTree class. Converts relative to absolute.
+        if file_name[0] != '-':
+            file_name = self.file_tree.relative_to_absolute(file_name)
+
         # Check that the file exists
         if self.validate_delete(file_name):
             os.remove(file_name)
@@ -72,6 +80,10 @@ class FileSystem(object):
     def dd(self, dir_name):
         """ Deletes the directory with the specified name.
         """
+        # A better design would call this in some function in the FileTree class. Converts relative to absolute.
+        if dir_name[0] != '-':
+            file_name = self.file_tree.relative_to_absolute(file_name)
+
         # Check that directory exists
         if self.validate_dd(dir_name):
             for file in os.listdir('.'):
@@ -95,6 +107,11 @@ class FileSystem(object):
         """
         # It would have made more sense to do this line elsewhere, but this was simpler.
         file_name, space, content = args.partition(' ')
+
+        # A better design would call this in some function in the FileTree class. Converts relative to absolute.
+        if file_name[0] != '-':
+            file_name = self.file_tree.relative_to_absolute(file_name)
+
         if self.file_exists(file_name):
             with open(file_name, 'a') as file:
                 file.write(content)
@@ -104,6 +121,10 @@ class FileSystem(object):
     def cat(self, file_name):
         """ Prints the contents of a named file. File names can be absolute or relative.
         """
+        # A better design would call this in some function in the FileTree class. Converts relative to absolute.
+        if file_name[0] != '-':
+            file_name = self.file_tree.relative_to_absolute(file_name)
+
         if self.file_exists(file_name):
             with open(file_name) as file:
                 content = file.read()
@@ -235,10 +256,6 @@ class FileSystem(object):
     def quit(self):
         sys.exit()
 
-    def test(self, name):
-        node = self.file_tree.locate_by_name(name)
-        print(node.get_full_name())
-
 """ Tree stuff """
 
 
@@ -263,11 +280,12 @@ class FileTree(object):
         if name == '-':
             return self.root
 
+        # Deal with relative paths
+        if name[0] != '-':
+            name = self.relative_to_absolute(name)
+
         # Get start node
-        if name[0] != '-':  # Path must be relative
-            node = self.get_start_of_relative_path(name)
-        else:
-            node = self.root  # Start at the root
+        node = self.root  # Start at the root
 
         name_path = name.split('-')[1:]
 
@@ -305,11 +323,6 @@ class FileTree(object):
 
         # Should have returned by now
         raise NoSuchPathException("The specified file or directory does not exist.")
-
-    def get_start_of_relative_path(self, rel_path):
-        """
-        """
-        pass
 
     def delete_file_by_name(self, name):
         """ Given the fully-qualified name of a file, deletes that file
@@ -387,6 +400,12 @@ class FileTree(object):
             path_to_parent = '-' if not path else path + '-'
             parent = self.locate_by_name(path_to_parent)
         return parent
+
+    def relative_to_absolute(self, name):
+        """ Converts a relative file name to an absolute one, using the current working directory.
+        """
+        current_dir_name = self.current_directory.get_full_name()
+        return current_dir_name + name
 
 
 class Node(object):
