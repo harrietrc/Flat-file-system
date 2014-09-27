@@ -28,8 +28,8 @@ class FileSystem(object):
             the input is invalid. Decided to execute here rather than in main to make it easier to unit test.
         """
         if len(args):  # Arguments were given
-            {'create': self.create, 'delete': self.delete, 'ls': self.ls, 'dd': self.dd, 'add': self.add
-            }.get(command, self.not_mapped)(args)
+            {'create': self.create, 'delete': self.delete, 'ls': self.ls, 'dd': self.dd, 'add': self.add,
+            'cat': self.cat}.get(command, self.not_mapped)(args)
         else:  # No arguments given
             {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls, 'clear': self.clear}.get(
                 command, self.not_mapped)()
@@ -84,12 +84,23 @@ class FileSystem(object):
         """ Parses arguments to file name and content to be appended, then appends the content to the file. Assumes
             that the file name has no spaces.
         """
+        # It would have made more sense to do this line elsewhere, but this was simpler.
         file_name, space, content = args.partition(' ')
         if self.file_exists(file_name):
             with open(file_name, 'a') as file:
                 file.write(content)
         else:
             print("File does not exist.")
+
+    def cat(self, file_name):
+        """ Prints the contents of a named file. File names can be absolute or relative.
+        """
+        if self.file_exists(file_name):
+            with open(file_name) as file:
+                content = file.read()
+                print(content)
+        else:
+            print("File does not exist")
 
     def validate_dd(self, dir_name):
         """ Validates that the directory to be deleted exists. Returns false if the name is invalid.
