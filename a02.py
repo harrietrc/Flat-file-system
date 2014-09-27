@@ -28,8 +28,8 @@ class FileSystem(object):
             the input is invalid. Decided to execute here rather than in main to make it easier to unit test.
         """
         if len(args):  # Arguments were given
-            {'create': self.create, 'delete': self.delete, 'ls': self.ls, 'dd': self.dd}.get(command, self.not_mapped)(
-                args)
+            {'create': self.create, 'delete': self.delete, 'ls': self.ls, 'dd': self.dd, 'add': self.add
+            }.get(command, self.not_mapped)(args)
         else:  # No arguments given
             {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls, 'clear': self.clear}.get(
                 command, self.not_mapped)()
@@ -80,6 +80,17 @@ class FileSystem(object):
             # Clear the tree
             self.file_tree = FileTree()  # Just replace the old tree
 
+    def add(self, args):
+        """ Parses arguments to file name and content to be appended, then appends the content to the file. Assumes
+            that the file name has no spaces.
+        """
+        file_name, space, content = args.partition(' ')
+        if self.file_exists(file_name):
+            with open(file_name, 'a') as file:
+                file.write(content)
+        else:
+            print("File does not exist.")
+
     def validate_dd(self, dir_name):
         """ Validates that the directory to be deleted exists. Returns false if the name is invalid.
         """
@@ -104,9 +115,8 @@ class FileSystem(object):
             return False
 
         # Deals with absolute paths only
-        for file in os.listdir('.'):
-            if file == file_name:
-                return True
+        if self.file_exists(file_name):
+            return True
         print("File does not exist.")
         return False
 
@@ -119,12 +129,18 @@ class FileSystem(object):
             return False
 
         # Check that file name is unique
+        if self.file_exists(file_name):
+            print("File name is not unique")
+            return False
+        return True
+
+    def file_exists(self, file_name):
+        """ Checks whether the file exists in the current directory. Returns true if it does.
+        """
         for file in os.listdir('.'):
             if file == file_name:
-                print("File name is not unique")
-                return False
-
-        return True
+                return True
+        return False
 
     def tree(self):
         """ Print the file tree
