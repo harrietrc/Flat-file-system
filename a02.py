@@ -1,6 +1,10 @@
 __author__ = 'Harriet Robinson-Chen'
 __project__ = 'Softeng 370 Assignment 2'
 
+""" One thing to note, if this doesn't behave as expected - any files you manually add (outside of through the create
+    command) will be picked up by this file system if they're formatted like the other ffs files. I didn't, however,
+    implement a check to see whether files had been removed by means other than the delete command. """
+
 import sys
 import os
 
@@ -32,7 +36,8 @@ class FileSystem(object):
             {'create': self.create, 'delete': self.delete, 'ls': self.ls, 'dd': self.dd, 'add': self.add,
                 'cat': self.cat, 'test': self.test}.get(command, self.not_mapped)(args)
         else:  # No arguments given
-            {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls, 'clear': self.clear}.get(
+            {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls, 'clear': self.clear, 'pwd': self.pwd
+                }.get(
                 command, self.not_mapped)()
 
     def not_mapped(self, args=None):
@@ -183,7 +188,9 @@ class FileSystem(object):
             os.system('ls -l')
 
     def scan(self):
-        """ Scans the real directory for new files and directories that were not created through this program.
+        """ Scans the real directory for new files and directories that were not created through this program. This
+            DOES NOT check whether any files are manually deleted during program execution (as I don't think that
+            even what I have here is necessary, let alone that added functionality).
         """
         # Perhaps a little inelegant?
         for file in os.listdir('.'):
@@ -192,6 +199,14 @@ class FileSystem(object):
                     self.file_tree.locate_by_name(file)
                 except NoSuchPathException:
                     self.file_tree.create_file_by_name(file)
+
+    def pwd(self):
+        """ Prints the current working directory's name.
+        """
+        current_directory = self.file_tree.current_directory
+        # I'm not sure I like that Node methods can be called from this class. ls already does this, however.
+        current_directory_name = current_directory.get_full_name()
+        print(current_directory_name)
 
     def quit(self):
         sys.exit()
