@@ -224,14 +224,13 @@ class FileSystem(object):
             else:
                 self.file_tree.current_directory = self.file_tree.current_directory.parent
         else:
-            # Check format of name
+            # Check format of name - specs say to allow the last hyphen to be ommitted.
             if directory[-1] != '-':
-                print("Please specify a directory, not a file.")
-            else:
-                try:
-                    self.file_tree.current_directory = self.file_tree.locate_by_name(directory)
-                except NoSuchPathException:
-                    print("Directory does not exist.")
+                directory += '-'
+            try:
+                self.file_tree.current_directory = self.file_tree.locate_by_name(directory)
+            except NoSuchPathException:
+                print("Directory does not exist.")
 
     def quit(self):
         sys.exit()
