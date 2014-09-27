@@ -40,8 +40,7 @@ class FileSystem(object):
                 'cat': self.cat, 'cd': self.cd}.get(command, self.not_mapped)(args)
         else:  # No arguments given
             {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls, 'clear': self.clear, 'pwd': self.pwd,
-                'cd': self.cd}.get(
-                command, self.not_mapped)()
+                'cd': self.cd}.get(command, self.not_mapped)()
 
     def not_mapped(self, args=None):
         print("Invalid command. Please try again.")
@@ -82,7 +81,7 @@ class FileSystem(object):
         """
         # A better design would call this in some function in the FileTree class. Converts relative to absolute.
         if dir_name[0] != '-':
-            file_name = self.file_tree.relative_to_absolute(file_name)
+            dir_name = self.file_tree.relative_to_absolute(dir_name)
 
         # Check that directory exists
         if self.validate_dd(dir_name):
