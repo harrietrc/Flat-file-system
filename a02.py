@@ -8,6 +8,7 @@ import os
 def main():
     fs = FileSystem()
     while True:
+        fs.scan()
         line = fs.prompt()
         fs.parse(line)
 
@@ -181,6 +182,17 @@ class FileSystem(object):
         else:  # This assignment is supposed to be for linux
             os.system('ls -l')
 
+    def scan(self):
+        """ Scans the real directory for new files and directories that were not created through this program.
+        """
+        # Perhaps a little inelegant?
+        for file in os.listdir('.'):
+            if file.startswith('-'):
+                try:
+                    self.file_tree.locate_by_name(file)
+                except NoSuchPathException:
+                    self.file_tree.create_file_by_name(file)
+
     def quit(self):
         sys.exit()
 
@@ -328,11 +340,6 @@ class FileTree(object):
             path_to_parent = '-' if not path else path + '-'
             parent = self.locate_by_name(path_to_parent)
         return parent
-
-    def scan(self, directory):
-        """ Scans the given directory for new files and directories that were not created through this program.
-        """
-        pass
 
 
 class Node(object):
