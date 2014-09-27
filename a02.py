@@ -58,11 +58,39 @@ class FileSystem(object):
             os.remove(file_name)
             self.file_tree.delete_file_by_name(file_name)
 
-    def validate_delete(self, file_name):
-        """ Validates that the file to be deleted exists in the directory..
+    def dd(self, dir_name):
+        """ Deletes the directory with the specified name.
         """
+        # Check that directory exists
+        if self.validate_dd(dir_name):
+            pass
+
+    def validate_dd(self, dir_name):
+        """ Validates that the directory to be deleted exists. Returns false if the name is invalid.
+        """
+        # Check that it's actually a directory
+        if dir_name[-1] != '-':
+            print("Please enter a directory name, not the name of a file.")
+            return False
+
+        # This should deal with both absolute and relative paths
         for file in os.listdir('.'):
-            if file == file_name:
+            if dir_name in file:
+                return True
+        print("Directory does not exist.")
+        return False
+
+    def validate_delete(self, file_name):
+        """ Validates that the file to be deleted exists in the directory. Returns false if the name is invalid.
+        """
+        # Check that it's actually a file
+        if file_name[-1] == '-':
+            print("Please enter a file name, not the name of a directory.")
+            return False
+
+        # Should work for both absolute and relative paths
+        for file in os.listdir('.'):
+            if file.endswith(file_name):
                 return True
         print("File does not exist.")
         return False
@@ -104,7 +132,7 @@ class FileSystem(object):
             pass
 
     def rls(self):
-        """ Executes the system's ls -l command.
+        """ Executes the system's ls -l command. Assumes current directory is A2dir, but can easily be specified.
         """
         if os.name == 'nt':  # I'm developing in Windows
             os.system('icacls . /T /Q')  # Eww gross
