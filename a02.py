@@ -191,16 +191,16 @@ class FileSystem(object):
         """ Lists all the files and directories in the specified directory, or in the current working directory if no
             directory is specified.
         """
-        if dir_name:
-            directory = self.file_tree.locate_by_name(dir_name)
-            # Print files and directories in specified directory
-            for file in directory.files:
-                print("f: ", file.name)
-            for child_dir in directory.dirs:
-                print("d: ", child_dir.name)
-        else:
-            # Print files in current working directory
-            pass
+        # No argument - use current working directory
+        if not dir_name:
+            dir_name = self.file_tree.current_directory.get_full_name()
+        directory = self.file_tree.locate_by_name(dir_name)
+
+        # Print files and directories in specified directory
+        for file in directory.files:
+            print("f: ", file.name)
+        for child_dir in directory.dirs:
+            print("d: ", child_dir.name)
 
     def rls(self):
         """ Executes the system's ls -l command. Assumes current directory is A2dir, but can easily be specified.
