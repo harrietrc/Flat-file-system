@@ -277,7 +277,7 @@ class FileTree(object):
 
     def __str__(self):
         s = ''
-        s += str(self.root)
+        s += self.root.print_tree(0)
         return s
 
     def locate_by_name(self, name):
@@ -508,8 +508,26 @@ class DirNode(Node):
     def __hash__(self):
         return super(DirNode, self).__hash__()
 
-    def __str__(self):
-        return self.name
+    def print_tree(self, nesting_level):
+        """ Function that is called recursively in order to print the tree.
+        """
+        # Root doesn't need hyphens either side
+        if self.name != '-':
+            s = '\t' * nesting_level + '-' + self.name + '-' + '\n'
+            num_equals = len(self.name) + 2
+        else:
+            s = '\t' * nesting_level + self.name + '\n'
+            num_equals = len(self.name)
+
+        # Print equals signs
+        s += '\t' * nesting_level + '=' * num_equals + '\n'
+
+        # Print files and directories
+        for file in self.files:
+            s += '\t' * nesting_level + str(file) + '\n'
+        for directory in self.dirs:
+            s += directory.print_tree(nesting_level + 1)
+        return s
 
 
 class NoSuchPathException(Exception):
