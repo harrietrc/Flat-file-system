@@ -14,14 +14,24 @@ import os
 
 
 def main():
+    # Get the input function for this version of Python
+    if sys.version[0] == '3':
+	raw_input = input
+
+    # Create the directory, if necessary
     if not os.path.exists('./A2dir'):
         os.makedirs('./A2dir')
+
+    # Prompt and execute
     fs = FileSystem()
     while True:
         fs.scan()
         line = fs.prompt()
-        if not os.isatty(sys.stdin.fileno()):  # stdin is a file or pipeline
+
+	# Simulate user input if the input is redirected from a file
+        if not os.isatty(sys.stdin.fileno()): 
             print(line)
+
         fs.parse(line)
 
 
@@ -33,7 +43,7 @@ class FileSystem(object):
         self.file_tree = FileTree()
 
     def prompt(self):
-        var = input("ffs> ")
+        var = raw_input("ffs> ")
         return var
 
     def interpret(self, command, args):
