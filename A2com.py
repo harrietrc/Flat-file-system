@@ -509,7 +509,9 @@ class DirNode(Node):
         return super(DirNode, self).__hash__()
 
     def print_tree(self, nesting_level):
-        """ Function that is called recursively in order to print the tree.
+        """ Function that is called recursively in order to print the tree. I've assumed that the number of equals signs
+            should be the same as the length of the directory name, not the length of the longest file name in that
+            directory.
         """
         # Root doesn't need hyphens either side
         if self.name != '-':
