@@ -211,9 +211,9 @@ class FileSystem(object):
 
         # Print files and directories in specified directory
         for file in directory.files:
-            print("f: " + file.name)
+            print("f: ", file.name)
         for child_dir in directory.dirs:
-            print("d: " + child_dir.name)
+            print("d: ", child_dir.name)
 
     def rls(self):
         """ Executes the system's ls -l command. Assumes current directory is A2dir, but can easily be specified.
