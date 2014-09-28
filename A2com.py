@@ -192,7 +192,8 @@ class FileSystem(object):
     def tree(self):
         """ Print the file tree
         """
-        print(self.file_tree)
+        tree = str(self.file_tree)[:-1]
+        print(tree)
 
     def ls(self, dir_name=None):
         """ Lists all the files and directories in the specified directory, or in the current working directory if no
