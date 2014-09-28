@@ -5,8 +5,8 @@ __project__ = 'Softeng 370 Assignment 2'
     command) will be picked up by this file system if they're formatted like the other ffs files. I didn't, however,
     implement a check to see whether files had been removed by means other than the delete command.
 
-    Note also that dd and ls accept directory names that miss the final hyphen, even though the specs don't require it
-    (although I think it might be mentioned somewhere on the assignment brief).
+    Note also that dd, tree, and ls accept directory names that miss the final hyphen, even though the specs don't
+    require it (although I think it might be mentioned somewhere on the assignment brief).
     """
 
 import sys
@@ -21,7 +21,7 @@ def main():
         fs.scan()
         line = fs.prompt()
         if not os.isatty(sys.stdin.fileno()):  # stdin is a file or pipeline
-            print(line + '\n')
+            print(line)
         fs.parse(line)
 
 
@@ -33,7 +33,7 @@ class FileSystem(object):
         self.file_tree = FileTree()
 
     def prompt(self):
-        var = raw_input("ffs> ")
+        var = input("ffs> ")
         return var
 
     def interpret(self, command, args):
@@ -42,7 +42,7 @@ class FileSystem(object):
         """
         if len(args):  # Arguments were given
             {'create': self.create, 'delete': self.delete, 'ls': self.ls, 'dd': self.dd, 'add': self.add,
-                'cat': self.cat, 'cd': self.cd}.get(command, self.not_mapped)(args)
+                'cat': self.cat, 'cd': self.cd, 'tree': self.tree}.get(command, self.not_mapped)(args)
         else:  # No arguments given
             {'quit': self.quit, 'tree': self.tree, 'ls': self.ls, 'rls': self.rls, 'clear': self.clear, 'pwd': self.pwd,
                 'cd': self.cd}.get(command, self.not_mapped)()
@@ -191,11 +191,26 @@ class FileSystem(object):
                 return True
         return False
 
-    def tree(self):
+    def tree(self, dir_name=None):
         """ Print the file tree
         """
-        tree = str(self.file_tree)[:-1]
-        print(tree)
+        if not dir_name:  # Print from the root down
+            tree = str(self.file_tree)[:-1]
+            print(tree)
+        else:
+            # Allow the user to leave off the final hyphen
+            if dir_name[-1] != '-':
+                dir_name += '-'
+
+            # A better design would call this in some function in the FileTree class. Converts relative to absolute.
+            if dir_name[0] != '-':
+                dir_name = self.file_tree.relative_to_absolute(dir_name)
+
+            try:
+                tree = self.file_tree.print_tree_from_dir(dir_name)[:-1]
+                print(tree)
+            except NoSuchPathException:
+                print("Directory does not exist.")
 
     def ls(self, dir_name=None):
         """ Lists all the files and directories in the specified directory, or in the current working directory if no
@@ -281,6 +296,13 @@ class FileTree(object):
     def __str__(self):
         s = ''
         s += self.root.print_tree(0)
+        return s
+
+    def print_tree_from_dir(self, dir_name):
+        """ Prints the tree, starting at a certain directory, given the name of the directory
+        """
+        directory = self.locate_by_name(dir_name)
+        s = directory.print_tree(0)
         return s
 
     def locate_by_name(self, name):
