@@ -20,6 +20,8 @@ def main():
     while True:
         fs.scan()
         line = fs.prompt()
+        if not os.isatty(sys.stdin.fileno()):  # stdin is a file or pipeline
+            print(line + '\n')
         fs.parse(line)
 
 
